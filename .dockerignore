@@ -1,0 +1,32 @@
+# Git files
+.git
+.gitignore
+
+# Build artifacts
+*.o
+*.obj
+*.exe
+*.out
+dssproto
+
+# Docker files (not needed in build context)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation (exclude specific files, but keep README.md)
+# *.md
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp

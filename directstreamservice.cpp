@@ -1,6 +1,6 @@
-// main.cpp
-// Compile with: g++ -std=c++17 main.cpp -o rawproto
-// Run (as root): sudo ./rawproto <interface> <dest-mac>
+// directstreamservice.cpp
+// Compile with: g++ -std=c++17 directstreamservice.cpp -o dssproto
+// Run (as root): sudo ./dssproto <interface> <dest-mac>
 
 #include <arpa/inet.h>
 #include <errno.h>
