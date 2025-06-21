@@ -51,6 +51,14 @@ std::array<uint8_t, 6> parse_mac(const std::string& mac) {
     return b;
 }
 
+// Converte 6 bytes em string "AA:BB:CC:DD:EE:FF"
+std::string format_mac(const uint8_t* mac) {
+    char buf[18];
+    std::snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
+                  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    return std::string(buf);
+}
+
 class RawSocket {
 public:
     RawSocket(const std::string& ifname) {
@@ -146,7 +154,11 @@ int main(int argc, char* argv[]) {
 
         // Envia
         raw.send_frame(dst_mac, frame_data.data(), frame_data.size());
-        std::cout << "Enviado: \"" << msg << "\"\n";
+
+        // Obter MAC de origem do socket
+        auto src_mac = raw.src_mac();
+        std::cout << "Enviado: \"" << msg << "\" de " << format_mac(src_mac.data())
+                  << " para " << format_mac(dst_mac.data()) << "\n";
 
         // Recebe e imprime o primeiro frame com nosso Ethertype
         uint8_t buf[1600];
@@ -162,9 +174,14 @@ int main(int argc, char* argv[]) {
             auto* rh = reinterpret_cast<PacketHeader*>(buf + 14);
             size_t plen = ntohs(rh->length);
             std::string rdata((char*)(buf+14+sizeof(PacketHeader)), plen);
-            std::cout << "Recebido type=" << int(rh->type)
-                      << " seq=" << ntohl(rh->seq)
-                      << " data=\"" << rdata << "\"\n";
+
+            // Extrair MACs do frame Ethernet (destino nos primeiros 6 bytes, origem nos próximos 6)
+            std::string src_mac_str = format_mac(buf + 6);  // MAC origem
+            std::string dst_mac_str = format_mac(buf);      // MAC destino
+
+            std::cout << "Recebido: \"" << rdata << "\" de " << src_mac_str
+                      << " para " << dst_mac_str
+                      << " (type=" << int(rh->type) << " seq=" << ntohl(rh->seq) << ")\n";
             break;
         }
     }
