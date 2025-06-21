@@ -16,8 +16,16 @@ services:
     #   - NET_RAW
     #   - NET_ADMIN
     
-    # Use host networking to access physical interfaces
-    network_mode: host
+    # Network configuration with custom MAC address
+    # Option 1: Use host networking (current - no MAC control)
+    # network_mode: host
+
+    # Option 2: Use bridge network with custom MAC (recommended for MAC control)
+    networks:
+      - dssproto_network
+
+    # Set custom MAC address for the container
+    mac_address: "02:42:ac:11:00:02"
     
     # Keep container running for interactive use
     stdin_open: true
@@ -35,3 +43,49 @@ services:
     # Environment variables
     environment:
       - TERM=xterm-256color
+
+  # Second container for testing communication
+  directstreambuffer-echo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: directstreambuffer:latest
+    container_name: directstreambuffer-echo
+
+    # Required for raw socket operations
+    privileged: true
+
+    # Network configuration
+    networks:
+      - dssproto_network
+
+    # Different MAC address for the second container
+    mac_address: "02:42:ac:11:00:03"
+
+    # Keep container running for interactive use
+    stdin_open: true
+    tty: true
+
+    # Override default command for interactive shell
+    command: /bin/bash
+
+    # Mount source code for development (optional)
+    volumes:
+      - .:/workspace
+
+    working_dir: /app
+
+    # Environment variables
+    environment:
+      - TERM=xterm-256color
+
+# Network definitions
+networks:
+  dssproto_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.enable_ipv6: "false"
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1

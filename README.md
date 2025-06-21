@@ -40,6 +40,15 @@ This project implements a custom network protocol that operates at the Ethernet 
    docker-compose exec directstreambuffer /bin/bash
    ```
 
+   **Two containers with different MAC addresses:**
+   ```bash
+   # Container 1: MAC 02:42:ac:11:00:02
+   docker-compose exec directstreambuffer /bin/bash
+
+   # Container 2: MAC 02:42:ac:11:00:03
+   docker-compose exec directstreambuffer-echo /bin/bash
+   ```
+
 3. **Run the application inside container:**
    ```bash
    ./dssproto <interface> <dest-mac>
@@ -76,9 +85,14 @@ sudo ./dssproto <interface> <dest-mac>
 - `interface`: Network interface name (e.g., eth0, enp0s3)
 - `dest-mac`: Destination MAC address in format AA:BB:CC:DD:EE:FF
 
-**Example:**
+**Examples:**
 ```bash
+# Basic usage
 ./dssproto eth0 aa:bb:cc:dd:ee:ff
+
+# Communication between containers
+./dssproto eth0 02:42:ac:11:00:03  # From container 1 to container 2
+./dssproto eth0 02:42:ac:11:00:02  # From container 2 to container 1
 ```
 
 ## Protocol Specification
@@ -97,6 +111,40 @@ sudo ./dssproto <interface> <dest-mac>
 ### Ethernet Frame
 ```
 | Dest MAC (6B) | Src MAC (6B) | EtherType (2B) | Custom Packet | FCS (4B) |
+```
+
+## Network Configuration
+
+### MAC Address Setup
+
+The docker-compose configuration includes two containers with predefined MAC addresses:
+
+- **Container 1** (`directstreambuffer`): `02:42:ac:11:00:02`
+- **Container 2** (`directstreambuffer-echo`): `02:42:ac:11:00:03`
+
+### Custom Network
+
+- **Network**: `dssproto_network` (bridge)
+- **Subnet**: `172.20.0.0/16`
+- **Gateway**: `172.20.0.1`
+
+### Testing Communication
+
+Use the provided test script:
+```bash
+chmod +x test-communication.sh
+./test-communication.sh
+```
+
+Or manually test between containers:
+```bash
+# Terminal 1 - Container 1
+docker-compose exec directstreambuffer /bin/bash
+./dssproto eth0 02:42:ac:11:00:03
+
+# Terminal 2 - Container 2
+docker-compose exec directstreambuffer-echo /bin/bash
+./dssproto eth0 02:42:ac:11:00:02
 ```
 
 ## Security Notes
